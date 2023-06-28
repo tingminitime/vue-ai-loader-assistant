@@ -1,0 +1,111 @@
+<script setup>
+import { ref } from 'vue'
+import { fetchChat } from '@/api'
+
+const newMessage = ref('')
+
+const chatMessages = ref([])
+
+const messageHistory = []
+
+async function sendMessageHandler() {
+  const message = {
+    type: 'user',
+    content: newMessage.value,
+  }
+
+  chatMessages.value.push(message)
+
+  newMessage.value = ''
+
+  try {
+    const res = await fetchChat('請問故事的名稱是 ?')
+    const data = await res.json()
+    console.log('response data: ', data)
+
+    chatMessages.value.push({
+      type: 'ai',
+      content: data.data?.text || '',
+    })
+
+    messageHistory.push(message.content, data.data?.text)
+    console.log('messageHistory: ', messageHistory)
+  } catch (err) {
+    console.log(err)
+  }
+}
+</script>
+
+<template>
+  <div>
+    導覽列
+    <header
+      class="fixed left-0 right-0 top-0 z-10 bg-blue-500 px-4 py-2 text-xl font-bold text-white"
+    >
+      AI Assistant
+    </header>
+
+    <main class="mt-16 p-4">
+      <div
+        class="h-[calc(100vh-250px)] overflow-y-scroll rounded-lg bg-white p-4 shadow-lg"
+      >
+        <template v-for="chat in chatMessages">
+          <!-- 用戶訊息 -->
+          <div
+            v-if="chat.type === 'user'"
+            class="mb-2 flex items-end justify-end"
+          >
+            <div
+              class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tr-lg bg-purple-500 p-2 text-white"
+            >
+              {{ chat.content }}
+            </div>
+            <img
+              class="ml-2 h-8 w-8 rounded-full"
+              src="@/assets/avatar-user.png"
+              alt="user avatar"
+            />
+          </div>
+
+          <!-- AI 訊息 -->
+          <div
+            v-else
+            class="mb-2 flex items-end"
+          >
+            <img
+              class="mr-2 h-8 w-8 rounded-full"
+              src="@/assets/avatar-ai.png"
+              alt="AI avatar"
+            />
+            <div
+              class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tl-lg bg-blue-500 p-2 text-white"
+            >
+              <div>{{ chat.content }}</div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </main>
+
+    <!-- 輸入訊息 -->
+    <footer class="fixed bottom-0 w-full p-4">
+      <div class="item-center flex">
+        <input
+          type="text"
+          class="flex-grow rounded-l-lg border border-gray-300 p-2 focus:outline-none"
+          placeholder="請輸入訊息..."
+          v-model="newMessage"
+          @keyup.enter="sendMessageHandler"
+          autofocus
+        />
+        <button
+          type="button"
+          class="rounded-r-lg bg-purple-500 px-4 py-2 font-bold text-white"
+          @click="sendMessageHandler"
+        >
+          送出
+        </button>
+      </div>
+    </footer>
+  </div>
+</template>

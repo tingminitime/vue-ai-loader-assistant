@@ -38,21 +38,15 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
     // memory: new BufferMemory({
     //   memoryKey: 'chat_history' // Must be set to "chat_history"
     // })
-    // returnSourceDocuments: true
+    returnSourceDocuments: true
   }
 )
 
-const res = await chain.call({
-  question: '請問此故事的名稱為何?',
-  chat_history: []
-})
+export async function chat(message, history) {
+  const res = await chain.call({
+    question: message,
+    chat_history: history || []
+  })
 
-console.log(res)
-
-const secondRes = await chain.call({
-  // question: '故事中出現的人物名稱為何?',
-  question: '我剛剛問的問題是什麼?',
-  chat_history: ['請問此故事的名稱為何?', res.text]
-})
-
-console.log(secondRes)
+  return res
+}

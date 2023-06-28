@@ -17,8 +17,8 @@ const pdfLoader = new PDFLoader(filePath)
 const rawDocs = await pdfLoader.load()
 
 const splitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 500,
-  chunkOverlap: 100
+  chunkSize: 200,
+  chunkOverlap: 40
 })
 
 const docs = await splitter.splitDocuments(rawDocs)
