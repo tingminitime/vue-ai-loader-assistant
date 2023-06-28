@@ -45,7 +45,7 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
 export async function chat(message, history) {
   const res = await chain.call({
     question: message,
-    chat_history: history || []
+    chat_history: history || ''
   })
 
   return res

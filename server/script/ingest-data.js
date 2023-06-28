@@ -1,6 +1,8 @@
 /**
  * 將文件向量化並儲存至 Pinecone
  */
+import { writeFile } from 'node:fs'
+import getCurrentDateTime from '../utils/getCurrentDateTime.js'
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { PineconeClient } from '@pinecone-database/pinecone'
@@ -23,6 +25,22 @@ const splitter = new RecursiveCharacterTextSplitter({
 
 const docs = await splitter.splitDocuments(rawDocs)
 // console.log(docs)
+
+const logData = JSON.stringify(
+  { log: docs, log_time: new Date().toLocaleString('en-US') },
+  null,
+  2
+)
+
+const dateTime = getCurrentDateTime()
+
+writeFile(`./logs/${dateTime}.json`, logData, err => {
+  if (err) {
+    console.error(err)
+    return
+  }
+  console.log('Log file has been saved.')
+})
 
 const pineconeClient = new PineconeClient()
 await pineconeClient.init({

@@ -10,8 +10,8 @@ const messageHistory = []
 
 async function sendMessageHandler() {
   const message = {
-    type: 'user',
-    content: newMessage.value,
+    type: 'human',
+    text: newMessage.value.trim(),
   }
 
   chatMessages.value.push(message)
@@ -19,16 +19,16 @@ async function sendMessageHandler() {
   newMessage.value = ''
 
   try {
-    const res = await fetchChat('請問故事的名稱是 ?')
+    const res = await fetchChat(message.text, messageHistory.join('\n'))
     const data = await res.json()
     console.log('response data: ', data)
 
     chatMessages.value.push({
       type: 'ai',
-      content: data.data?.text || '',
+      text: data.data?.text.trim() || '',
     })
 
-    messageHistory.push(message.content, data.data?.text)
+    messageHistory.push(message.text, data.data?.text || '')
     console.log('messageHistory: ', messageHistory)
   } catch (err) {
     console.log(err)
@@ -52,13 +52,13 @@ async function sendMessageHandler() {
         <template v-for="chat in chatMessages">
           <!-- 用戶訊息 -->
           <div
-            v-if="chat.type === 'user'"
+            v-if="chat.type === 'human'"
             class="mb-2 flex items-end justify-end"
           >
             <div
-              class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tr-lg bg-purple-500 p-2 text-white"
+              class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tl-lg bg-purple-500 p-2 text-white"
             >
-              {{ chat.content }}
+              {{ chat.text }}
             </div>
             <img
               class="ml-2 h-8 w-8 rounded-full"
@@ -78,9 +78,9 @@ async function sendMessageHandler() {
               alt="AI avatar"
             />
             <div
-              class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tl-lg bg-blue-500 p-2 text-white"
+              class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tr-lg bg-blue-500 p-2 text-white"
             >
-              <div>{{ chat.content }}</div>
+              <div>{{ chat.text }}</div>
             </div>
           </div>
         </template>
@@ -102,6 +102,7 @@ async function sendMessageHandler() {
           type="button"
           class="rounded-r-lg bg-purple-500 px-4 py-2 font-bold text-white"
           @click="sendMessageHandler"
+          :disabled="!newMessage"
         >
           送出
         </button>

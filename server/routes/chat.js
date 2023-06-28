@@ -7,6 +7,7 @@ const router = express.Router()
 router.post('/', async (req, res, next) => {
   const { message, history } = req.body
   console.log('Receive message: ', message)
+  console.log('Receive history: ', history)
 
   if (!message) {
     res.status(400).json({
@@ -15,6 +16,10 @@ router.post('/', async (req, res, next) => {
     })
     return
   }
+
+  // res.status(200).json({
+  //   success: true
+  // })
 
   try {
     const result = await chat(message, history)
