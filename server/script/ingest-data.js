@@ -19,12 +19,12 @@ const pdfLoader = new PDFLoader(filePath)
 const rawDocs = await pdfLoader.load()
 
 const splitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 200,
-  chunkOverlap: 40
+  chunkSize: 300,
+  chunkOverlap: 60
 })
 
 const docs = await splitter.splitDocuments(rawDocs)
-// console.log(docs)
+console.log(`Split ${docs.length} documents.`)
 
 const logData = JSON.stringify(
   { log: docs, log_time: new Date().toLocaleString('en-US') },
