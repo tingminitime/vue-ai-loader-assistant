@@ -34,7 +34,7 @@ const logData = JSON.stringify(
 
 const dateTime = getCurrentDateTime()
 
-writeFile(`./logs/${dateTime}.json`, logData, err => {
+writeFile(`./logs/pdf-loader_${dateTime}.json`, logData, err => {
   if (err) {
     console.error(err)
     return

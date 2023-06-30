@@ -7,6 +7,7 @@ import logger from 'morgan'
 
 import indexRouter from './routes/index.js'
 import chatRouter from './routes/chat.js'
+import uploadRouter from './routes/upload.js'
 
 const app = express()
 
@@ -24,6 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', indexRouter)
 app.use('/chat', chatRouter)
+app.use('/upload', uploadRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
