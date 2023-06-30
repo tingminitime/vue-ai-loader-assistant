@@ -1,3 +1,4 @@
+import { ConsoleCallbackHandler } from 'langchain/callbacks'
 import { ConversationalRetrievalQAChain } from 'langchain/chains'
 import { OpenAI } from 'langchain/llms/openai'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
@@ -9,8 +10,9 @@ dotenv.config()
 
 // In Node.js defaults to process.env.OPENAI_API_KEY
 const model = new OpenAI({
-  temperature: 0.1
-  // modelName: 'gpt-3.5-turbo-0613' // Defaults to "text-davinci-003" if no model provided
+  temperature: 0.1,
+  modelName: 'gpt-3.5-turbo-0613', // Defaults to "text-davinci-003" if no model provided
+  callbacks: [new ConsoleCallbackHandler()]
 })
 
 const pineconeClient = new PineconeClient()
@@ -50,20 +52,23 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
   model,
   pineconeStore.asRetriever(),
   {
-    // questionGeneratorTemplate: CONDENSED_PROMPT,
-    // qaTemplate: QA_PROMPT,
+    questionGeneratorTemplate: CONDENSED_PROMPT,
+    qaTemplate: QA_PROMPT,
     // qaChainOptions: {
-    //   type: 'map_reduce',
+    //   type: 'map_reduce'
     // },
     returnSourceDocuments: true
   }
 )
 
 export async function chat(message, history) {
-  const res = await chain.call({
-    question: message,
-    chat_history: history || ''
-  })
+  const res = await chain.call(
+    {
+      question: message,
+      chat_history: history || ''
+    },
+    [new ConsoleCallbackHandler()]
+  )
 
   return res
 }

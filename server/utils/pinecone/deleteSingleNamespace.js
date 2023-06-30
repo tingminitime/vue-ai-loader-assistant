@@ -12,5 +12,6 @@ await pineconeClient.init({
 const pineconeIndex = pineconeClient.Index(process.env.PINECONE_INDEX_NAME)
 
 await pineconeIndex.delete1({
-  deleteAll: true
+  deleteAll: true,
+  namespace: ['fake-story-02']
 })
