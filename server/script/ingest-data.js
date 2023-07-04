@@ -1,23 +1,25 @@
 /**
  * 將文件向量化並儲存至 Pinecone
  */
-import { writeFile } from 'node:fs'
-import getCurrentDateTime from '../utils/getCurrentDateTime.js'
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-import { PineconeClient } from '@pinecone-database/pinecone'
-import { PineconeStore } from 'langchain/vectorstores/pinecone'
+// import { PineconeClient } from '@pinecone-database/pinecone'
+// import { PineconeStore } from 'langchain/vectorstores/pinecone'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 import dotenv from 'dotenv'
+import usePinecone from '../utils/pinecone/usePinecone.js'
+import saveDocsLogs from './save-docs-logs.js'
 
 dotenv.config()
 
+const { pineconeIndex, PineconeStore } = await usePinecone()
+
+// ===== 載入文件 =====
 const filePath = './docs/fake-story-02.pdf'
-
 const pdfLoader = new PDFLoader(filePath)
-
 const rawDocs = await pdfLoader.load()
 
+// ===== 將文件切塊 =====
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 300,
   chunkOverlap: 60
@@ -26,34 +28,13 @@ const splitter = new RecursiveCharacterTextSplitter({
 const docs = await splitter.splitDocuments(rawDocs)
 console.log(`Split ${docs.length} documents.`)
 
-const logData = JSON.stringify(
-  { log: docs, log_time: new Date().toLocaleString('en-US') },
-  null,
-  2
-)
+saveDocsLogs(docs, 'pdf')
 
-const dateTime = getCurrentDateTime()
-
-writeFile(`./logs/pdf-loader_${dateTime}.json`, logData, err => {
-  if (err) {
-    console.error(err)
-    return
-  }
-  console.log('Log file has been saved.')
-})
-
-const pineconeClient = new PineconeClient()
-await pineconeClient.init({
-  apiKey: process.env.PINECONE_API_KEY,
-  environment: process.env.PINECONE_ENVIRONMENT
-})
-
-const pineconeIndex = pineconeClient.Index(process.env.PINECONE_INDEX_NAME)
-
+// ===== 資料塊轉換成多維向量，儲存至資料庫 =====
 /**
- * OpenAIEmbeddings will use the OpenAI API key
- * Model Name : text-embedding-ada-002
- * Refer : https://openai.xiniushu.com/docs/guides/embeddings
+ * OpenAIEmbeddings 會使用到 OpenAI API key
+ * Model Name: text-embedding-ada-002
+ * Reference: https://openai.xiniushu.com/docs/guides/embeddings
  */
 try {
   PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {

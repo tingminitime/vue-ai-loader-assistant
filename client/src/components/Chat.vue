@@ -28,7 +28,7 @@ async function sendMessageHandler() {
       text: data.data?.text.trim() || '',
     })
 
-    messageHistory.push(message.text, data.data?.text || '')
+    messageHistory.push(message.text, data.data?.text.trim() || '')
     console.log('messageHistory: ', messageHistory)
   } catch (err) {
     console.log(err)
@@ -47,11 +47,10 @@ async function sendMessageHandler() {
           v-if="chat.type === 'human'"
           class="mb-2 flex items-end justify-end"
         >
-          <div
+          <p
             class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tl-lg bg-purple-500 p-2 text-white"
-          >
-            {{ chat.text }}
-          </div>
+            v-html="chat.text"
+          ></p>
           <img
             class="ml-2 h-8 w-8 rounded-full"
             src="@/assets/avatar-user.png"
@@ -72,7 +71,7 @@ async function sendMessageHandler() {
           <div
             class="inline-block w-max rounded-bl-lg rounded-br-lg rounded-tr-lg bg-blue-500 p-2 text-white"
           >
-            <div>{{ chat.text }}</div>
+            <p v-html="chat.text"></p>
           </div>
         </div>
       </template>
