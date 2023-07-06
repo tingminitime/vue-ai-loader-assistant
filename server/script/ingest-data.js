@@ -15,20 +15,20 @@ dotenv.config()
 const { pineconeIndex, PineconeStore } = await usePinecone()
 
 // ===== 載入文件 =====
-const filePath = './docs/fake-story-02.pdf'
+const filePath = './docs/fake-story-03.pdf'
 const pdfLoader = new PDFLoader(filePath)
-const rawDocs = await pdfLoader.load()
+const rawPDFDocs = await pdfLoader.load()
 
 // ===== 將文件切塊 =====
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 300,
-  chunkOverlap: 60
+  chunkOverlap: 60,
 })
 
-const docs = await splitter.splitDocuments(rawDocs)
-console.log(`Split ${docs.length} documents.`)
+const pdfDocs = await splitter.splitDocuments(rawPDFDocs)
+console.log(`Split ${pdfDocs.length} documents.`)
 
-saveDocsLogs(docs, 'pdf')
+saveDocsLogs(docs, 'pdf-loader')
 
 // ===== 資料塊轉換成多維向量，儲存至資料庫 =====
 /**
@@ -37,10 +37,10 @@ saveDocsLogs(docs, 'pdf')
  * Reference: https://openai.xiniushu.com/docs/guides/embeddings
  */
 try {
-  PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
+  PineconeStore.fromDocuments(pdfDocs, new OpenAIEmbeddings(), {
     pineconeIndex,
     textKey: 'text', // default
-    namespace: 'fake-story-02'
+    namespace: 'fake-story-03',
   })
 } catch (err) {
   console.error(err)

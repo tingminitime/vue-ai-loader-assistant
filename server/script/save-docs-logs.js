@@ -5,12 +5,12 @@ export default function saveDocsLogs(docs, type = 'pdf') {
   const logData = JSON.stringify(
     { log: docs, log_time: new Date().toLocaleString('en-US') },
     null,
-    2
+    2,
   )
 
   const dateTime = getCurrentDateTime()
 
-  writeFile(`./logs/${type}-loader_${dateTime}.json`, logData, err => {
+  writeFile(`./logs/${type}_${dateTime}.json`, logData, err => {
     if (err) {
       console.error(err)
       return

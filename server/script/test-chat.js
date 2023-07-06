@@ -4,9 +4,11 @@ import { OpenAI } from 'langchain/llms/openai'
 import { ChatOpenAI } from 'langchain/chat_models/openai'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 import { PromptTemplate } from 'langchain/prompts'
+import { BufferMemory } from 'langchain/memory'
+import { AIChatMessage, HumanChatMessage } from 'langchain/schema'
 import dotenv from 'dotenv'
 import usePinecone from '../utils/pinecone/usePinecone.js'
-import { SYSTEM_PROMPT, QA_PROMPT } from '../utils/prompt.js'
+import { QA_GENERATOR_PROMPT, QA_PROMPT } from '../utils/prompt.js'
 import saveDocsLogs from './save-docs-logs.js'
 
 dotenv.config()
@@ -14,61 +16,78 @@ dotenv.config()
 const { pineconeIndex, PineconeStore } = await usePinecone()
 
 // In Node.js defaults to process.env.OPENAI_API_KEY
-const model = new OpenAI({
+const model = new ChatOpenAI({
+  streaming: true,
   temperature: 0.1, // default is 0.7
   modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
   callbacks: [new ConsoleCallbackHandler()],
 })
 
+// ===== 實例化資料庫，準備後續對話使用 =====
 const pineconeStore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
   {
     pineconeIndex,
     textKey: 'text', // default
-    namespace: 'fake-story-02',
+    namespace: 'fake-story-03',
   },
 )
 
+// ===== 實例化有聊天記憶功能的對話鏈 =====
 const chain = ConversationalRetrievalQAChain.fromLLM(
   model,
-  pineconeStore.asRetriever(),
+  pineconeStore.asRetriever(4), // k值預設為4，代表回傳前4個最相似的文件
   {
-    questionGeneratorTemplate: SYSTEM_PROMPT,
-    // qaTemplate: QA_PROMPT,
+    memory: new BufferMemory({
+      memoryKey: 'chat_history',
+      inputKey: 'question',
+      outputKey: 'text',
+      returnMessages: true,
+    }),
+    questionGeneratorTemplate: QA_GENERATOR_PROMPT,
     qaChainOptions: {
-      type: 'map_reduce',
-      combinePrompt: PromptTemplate.fromTemplate(QA_PROMPT),
+      type: 'stuff',
+      prompt: PromptTemplate.fromTemplate(QA_PROMPT),
+      // If type is "map_reduce", then the following are required:
+      // combineMapPrompt: PromptTemplate.fromTemplate(QA_GENERATOR_PROMPT),
+      // combinePrompt: PromptTemplate.fromTemplate(QA_PROMPT),
+
+      //If type is "refine", then the following are required:
+      // questionPrompt: PromptTemplate.fromTemplate(QA_PROMPT),
     },
-    callbacks: [new ConsoleCallbackHandler()],
-    // returnSourceDocuments: true,
+    callbacks: [new ConsoleCallbackHandler()], // 印出對話鏈事件紀錄
+    returnSourceDocuments: false, // 可以設定為 true，會回傳資料庫中查詢到的文件
+    verbose: false,
   },
 )
 
-const question1 = '故事的名稱是?'
-const question2 = '故事裡面的人物有哪些?'
+const questions = [
+  '故事的名稱是?',
+  '故事目前有幾個章節?',
+  '故事中出現那些人物?',
+  '請回答我剛剛問了哪些問題?',
+]
 
-const firstChatRes = await chain
-  .call(
-    {
-      question: question1,
-      chat_history: '',
-    },
-    // [new ConsoleCallbackHandler()]
-  )
-  .catch(err => console.error(err))
+async function askMultipleQuestions(questions) {
+  const chatChainRes = []
+  for (let i = 0; i < questions.length; i++) {
+    const chatChainResItem = await chain.call(
+      {
+        question: questions[i],
+      },
+      // [new ConsoleCallbackHandler()],
+    )
+    // chatChainRes[`answer${i + 1}`] = chatChainResItem
+    chatChainRes.push({
+      question: questions[i],
+      answer: chatChainResItem.text,
+    })
+  }
+  return chatChainRes
+}
 
-console.log(firstChatRes)
+const chatChainRes = await askMultipleQuestions(questions)
 
-const secondChatRes = await chain
-  .call(
-    {
-      question: question2,
-      chat_history: `${question1}\n${firstChatRes.text}`,
-    },
-    // [new ConsoleCallbackHandler()]
-  )
-  .catch(err => console.error(err))
+console.log('chatChainRes: ', chatChainRes)
 
-console.log(secondChatRes)
-
-// saveDocsLogs({ firstChatRes, secondChatRes }, 'chat')
+saveDocsLogs(chatChainRes, 'test-chat')
