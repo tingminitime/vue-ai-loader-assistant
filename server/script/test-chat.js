@@ -1,11 +1,9 @@
 import { ConsoleCallbackHandler } from 'langchain/callbacks'
 import { ConversationalRetrievalQAChain } from 'langchain/chains'
 import { OpenAI } from 'langchain/llms/openai'
-import { ChatOpenAI } from 'langchain/chat_models/openai'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 import { PromptTemplate } from 'langchain/prompts'
 import { BufferMemory } from 'langchain/memory'
-import { AIChatMessage, HumanChatMessage } from 'langchain/schema'
 import dotenv from 'dotenv'
 import usePinecone from '../utils/pinecone/usePinecone.js'
 import { QA_GENERATOR_PROMPT, QA_PROMPT } from '../utils/prompt.js'
@@ -16,7 +14,7 @@ dotenv.config()
 const { pineconeIndex, PineconeStore } = await usePinecone()
 
 // In Node.js defaults to process.env.OPENAI_API_KEY
-const model = new ChatOpenAI({
+const model = new OpenAI({
   streaming: true,
   temperature: 0.1, // default is 0.7
   modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
@@ -63,31 +61,26 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
 
 const questions = [
   '故事的名稱是?',
-  '故事目前有幾個章節?',
-  '故事中出現那些人物?',
-  '請回答我剛剛問了哪些問題?',
+  '目前有哪些章節?',
+  '故事中出現哪些人物?',
+  '瑞安、艾莉絲、凱文這三個人的關係是什麼?',
 ]
 
 async function askMultipleQuestions(questions) {
-  const chatChainRes = []
+  const chatChain = []
   for (let i = 0; i < questions.length; i++) {
-    const chatChainResItem = await chain.call(
-      {
-        question: questions[i],
-      },
-      // [new ConsoleCallbackHandler()],
-    )
-    // chatChainRes[`answer${i + 1}`] = chatChainResItem
-    chatChainRes.push({
+    const chatChainItem = await chain.call({
       question: questions[i],
-      answer: chatChainResItem.text,
+    })
+    chatChain.push({
+      question: questions[i],
+      answer: chatChainItem.text,
     })
   }
-  return chatChainRes
+  return chatChain
 }
 
 const chatChainRes = await askMultipleQuestions(questions)
-
 console.log('chatChainRes: ', chatChainRes)
 
 saveDocsLogs(chatChainRes, 'test-chat')

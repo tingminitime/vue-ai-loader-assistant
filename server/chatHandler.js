@@ -30,7 +30,7 @@ const pineconeStore = await PineconeStore.fromExistingIndex(
 // ===== 聊天記憶功能的對話鏈實例化 =====
 const chain = ConversationalRetrievalQAChain.fromLLM(
   model,
-  pineconeStore.asRetriever(6),
+  pineconeStore.asRetriever(4),
   {
     memory: new BufferMemory({
       memoryKey: 'chat_history',
