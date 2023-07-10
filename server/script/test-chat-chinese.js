@@ -1,9 +1,9 @@
 import { ConsoleCallbackHandler } from 'langchain/callbacks'
 import { ConversationalRetrievalQAChain } from 'langchain/chains'
 import { OpenAI } from 'langchain/llms/openai'
+import { ChatOpenAI } from 'langchain/chat_models/openai'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 import { PromptTemplate } from 'langchain/prompts'
-import { BufferWindowMemory } from 'langchain/memory'
 import dotenv from 'dotenv'
 import usePinecone from '../utils/pinecone/usePinecone.js'
 import {
@@ -17,12 +17,27 @@ dotenv.config()
 
 const { pineconeIndex, PineconeStore } = await usePinecone()
 
+// let costInfo = []
+let costInfo = {
+  tokenUsage: {},
+  totalCost: 0,
+}
+
 // In Node.js defaults to process.env.OPENAI_API_KEY
-const model = new OpenAI({
-  streaming: true,
+const model = new ChatOpenAI({
   temperature: 0.1, // default is 0.7
   modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
-  callbacks: [new ConsoleCallbackHandler()],
+  callbacks: [
+    new ConsoleCallbackHandler(),
+    {
+      handleLLMEnd: async output => {
+        console.log(output.llmOutput.tokenUsage)
+        costInfo.tokenUsage = output.llmOutput
+        costInfo.totalCost =
+          (output.llmOutput?.tokenUsage?.totalTokens / 1000) * 0.002
+      },
+    },
+  ],
 })
 
 // ===== 實例化資料庫，準備後續對話使用 =====
@@ -35,42 +50,16 @@ const pineconeStore = await PineconeStore.fromExistingIndex(
   },
 )
 
-// ===== 對話紀錄限制 =====
-
-const memory = new BufferWindowMemory({
-  llm: new OpenAI({ modelName: 'gpt-3.5-turbo', temperature: 0 }),
-  memoryKey: 'chat_history',
-  inputKey: 'question',
-  outputKey: 'text',
-  returnMessages: true,
-  k: 0,
-})
-
 // ===== 實例化有聊天記憶功能的對話鏈 =====
-const chain = ConversationalRetrievalQAChain.fromLLM(
-  model,
-  pineconeStore.asRetriever(5), // k值預設為4，代表回傳前4個最相似的文件
-  {
-    questionGeneratorTemplate: QA_GENERATOR_PROMPT,
-    qaChainOptions: {
-      type: 'stuff',
-      prompt: PromptTemplate.fromTemplate(QA_PROMPT),
-    },
-    callbacks: [new ConsoleCallbackHandler()], // 印出對話鏈事件紀錄
-    returnSourceDocuments: false, // 可以設定為 true，會回傳資料庫中查詢到的文件
-    verbose: false,
-  },
-)
-
 function initChain(prompt) {
   return ConversationalRetrievalQAChain.fromLLM(
     model,
-    pineconeStore.asRetriever(5), // k值預設為4，代表回傳前4個最相似的文件
+    pineconeStore.asRetriever(5), // k值預設為4，代表回傳前k個最相似的文件
     {
       questionGeneratorTemplate: QA_GENERATOR_PROMPT,
       qaChainOptions: {
         type: 'stuff',
-        prompt,
+        prompt: PromptTemplate.fromTemplate(prompt),
       },
       callbacks: [new ConsoleCallbackHandler()], // 印出對話鏈事件紀錄
       returnSourceDocuments: false, // 可以設定為 true，會回傳資料庫中查詢到的文件
@@ -112,19 +101,18 @@ async function askMultipleQuestions(questions) {
   for (let i = 0; i < questions.length; i++) {
     const chatChainItem = await initChain(questions[i].select_prompt).call({
       question: questions[i].question,
-      chat_history: '',
+      chat_history: '', // 獨立提問，不需要聊天紀錄
     })
     chatChain.push({
-      question: questions[i],
+      question_info: questions[i],
       answer: chatChainItem.text,
+      costInfo,
     })
   }
   return chatChain
 }
 
 const chatChainRes = await askMultipleQuestions(chinese_questions)
-const memoryRes = await memory.loadMemoryVariables({})
-console.log('chatChainRes: ', chatChainRes)
-console.log('memoryRes: ', memoryRes)
+// console.log('chatChainRes: ', chatChainRes)
 
 saveDocsLogs(chatChainRes, 'test-single-chinese')

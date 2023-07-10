@@ -34,7 +34,7 @@ const pineconeStore = await PineconeStore.fromExistingIndex(
 // ===== 實例化有聊天記憶功能的對話鏈 =====
 const chain = ConversationalRetrievalQAChain.fromLLM(
   model,
-  pineconeStore.asRetriever(4), // k值預設為4，代表回傳前4個最相似的文件
+  pineconeStore.asRetriever(4), // k值預設為4，代表回傳前k個最相似的文件
   {
     memory: new BufferMemory({
       memoryKey: 'chat_history',
