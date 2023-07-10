@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@pinecone-database/pinecone": "^0.1.6",
+    "chalk": "^5.3.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^16.3.1",

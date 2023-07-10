@@ -4,12 +4,14 @@ import { OpenAI } from 'langchain/llms/openai'
 import { ChatOpenAI } from 'langchain/chat_models/openai'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 import { PromptTemplate } from 'langchain/prompts'
+import chalk from 'chalk'
 import dotenv from 'dotenv'
 import usePinecone from '../utils/pinecone/usePinecone.js'
 import {
   QA_GENERATOR_PROMPT,
   QA_PROMPT,
   NORMAL_PROMPT,
+  OPEN_PROMPT,
 } from '../utils/prompt.js'
 import saveDocsLogs from './save-docs-logs.js'
 
@@ -17,25 +19,32 @@ dotenv.config()
 
 const { pineconeIndex, PineconeStore } = await usePinecone()
 
-// let costInfo = []
-let costInfo = {
-  tokenUsage: {},
-  totalCost: 0,
+let costInfo = []
+
+const totalCostHandler = tokenUsage => {
+  costInfo.push({
+    tokenUsage,
+    totalCost: parseFloat(
+      ((tokenUsage?.totalTokens / 1000) * 0.002).toFixed(4)
+    ),
+  })
 }
 
 // In Node.js defaults to process.env.OPENAI_API_KEY
 const model = new ChatOpenAI({
   temperature: 0.1, // default is 0.7
   modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
+  // streaming: true,
   callbacks: [
     new ConsoleCallbackHandler(),
     {
       handleLLMEnd: async output => {
-        console.log(output.llmOutput.tokenUsage)
-        costInfo.tokenUsage = output.llmOutput
-        costInfo.totalCost =
-          (output.llmOutput?.tokenUsage?.totalTokens / 1000) * 0.002
+        console.log(output.llmOutput?.tokenUsage)
+        totalCostHandler(output.llmOutput?.tokenUsage)
       },
+      // async handleLLMNewToken(token) {
+      //   process.stdout.write(chalk.green(token))
+      // },
     },
   ],
 })
@@ -47,7 +56,7 @@ const pineconeStore = await PineconeStore.fromExistingIndex(
     pineconeIndex,
     textKey: 'text', // default
     namespace: 'chinese-chapter-01',
-  },
+  }
 )
 
 // ===== 實例化有聊天記憶功能的對話鏈 =====
@@ -64,7 +73,7 @@ function initChain(prompt) {
       callbacks: [new ConsoleCallbackHandler()], // 印出對話鏈事件紀錄
       returnSourceDocuments: false, // 可以設定為 true，會回傳資料庫中查詢到的文件
       verbose: false,
-    },
+    }
   )
 }
 
@@ -77,7 +86,7 @@ const chinese_questions = [
   {
     question:
       '請用至少300字繁體中文回答以下問題:\n請列出桃花源記詩文全文，並白話說明文章解析。',
-    select_prompt: NORMAL_PROMPT,
+    select_prompt: OPEN_PROMPT,
   },
   {
     question:
@@ -106,7 +115,7 @@ async function askMultipleQuestions(questions) {
     chatChain.push({
       question_info: questions[i],
       answer: chatChainItem.text,
-      costInfo,
+      costInfo: costInfo[i],
     })
   }
   return chatChain

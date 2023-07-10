@@ -22,6 +22,11 @@ export const NORMAL_PROMPT = `你是一位懂中文且有用的 AI 助手，請�
 回答: 
 `
 
+export const OPEN_PROMPT = `你是一位懂中文且有用的 AI 助手，請你扮演一份文件角色讓我可以與你對話。
+問題: {question}
+回答: 
+`
+
 // export const NORMAL_PROMPT = `你是一位懂中文且有用的 AI 助手，請你將根據給定的上下文訊息回答我的提問。如果不確定該如何回答，請回答「我只能回答相關問題」；如果無法回答，請說明理由。
 
 // {context}
