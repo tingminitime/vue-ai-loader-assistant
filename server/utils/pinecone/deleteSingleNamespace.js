@@ -16,4 +16,5 @@ await pineconeIndex.delete1({
   // namespace: ['fake-story-03'],
   // namespace: ['flowise_fake-story-03'],
   namespace: ['chinese-chapter-01'],
+  // namespace: ['flowise_chinese-chapter-01'],
 })

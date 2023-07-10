@@ -13,7 +13,8 @@ dotenv.config()
 const { pineconeIndex, PineconeStore } = await usePinecone()
 
 // ===== 載入文件 =====
-const filePath = './docs/fake-story-03.pdf'
+// const filePath = './docs/fake-story-03.pdf'
+const filePath = './docs_private/chinese-chapter-01.pdf'
 const pdfLoader = new PDFLoader(filePath)
 const rawPDFDocs = await pdfLoader.load()
 
@@ -38,7 +39,7 @@ try {
   PineconeStore.fromDocuments(pdfDocs, new OpenAIEmbeddings(), {
     pineconeIndex,
     textKey: 'text', // default
-    namespace: 'fake-story-03',
+    namespace: 'chinese-chapter-01',
   })
 } catch (err) {
   console.error(err)
