@@ -1,4 +1,4 @@
-export const QA_GENERATOR_PROMPT = `給定以下對話紀錄和一個後續問題，請重新描述為一個獨立的問題。
+export const QA_GENERATOR_PROMPT = `給定以下對話紀錄和一個後續問題，總結對話紀錄成摘要，若摘要與後續問題相關，請重新描述為一個獨立問題。
 對話紀錄:
 {chat_history}
 後續問題: {question}

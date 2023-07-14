@@ -25,12 +25,12 @@ const totalCostHandler = tokenUsage => {
   costInfo.push({
     tokenUsage,
     totalCost: parseFloat(
-      ((tokenUsage?.totalTokens / 1000) * 0.002).toFixed(4)
+      ((tokenUsage?.totalTokens / 1000) * 0.002).toFixed(4),
     ),
   })
 }
 
-// In Node.js defaults to process.env.OPENAI_API_KEY
+// OpenAI
 const model = new ChatOpenAI({
   temperature: 0.1, // default is 0.7
   modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
@@ -49,14 +49,47 @@ const model = new ChatOpenAI({
   ],
 })
 
+// Azure OpenAI
+// const model = new ChatOpenAI({
+//   temperature: 0.1, // default is 0.7
+//   modelName: 'gpt-35-turbo',
+//   streaming: true,
+//   azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
+//   azureOpenAIApiInstanceName: process.env.AZ_OPENAI_API_INSTANCE_NAME,
+//   azureOpenAIApiDeploymentName: process.env.AZ_OPENAI_API_DEPLOYMENT_NAME,
+//   azureOpenAIApiVersion: process.env.AZ_OPENAI_API_VERSION,
+//   azureOpenAIBasePath: process.env.AZ_OPENAI_BASE_PATH,
+//   callbacks: [
+//     new ConsoleCallbackHandler(),
+//     {
+//       handleLLMEnd: async output => {
+//         console.log(output.llmOutput?.tokenUsage)
+//         totalCostHandler(output.llmOutput?.tokenUsage)
+//       },
+//       // async handleLLMNewToken(token) {
+//       //   process.stdout.write(chalk.green(token))
+//       // },
+//     },
+//   ],
+// })
+
+const azureEmbeddings = new OpenAIEmbeddings({
+  azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
+  azureOpenAIApiDeploymentName:
+    process.env.AZ_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME,
+  azureOpenAIApiInstanceName: process.env.AZ_OPENAI_API_INSTANCE_NAME,
+  azureOpenAIApiVersion: process.env.AZ_OPENAI_API_VERSION,
+})
+
 // ===== 實例化資料庫，準備後續對話使用 =====
 const pineconeStore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
+  // azureEmbeddings,
   {
     pineconeIndex,
     textKey: 'text', // default
     namespace: 'chinese-chapter-01',
-  }
+  },
 )
 
 // ===== 實例化有聊天記憶功能的對話鏈 =====
@@ -73,7 +106,7 @@ function initChain(prompt) {
       callbacks: [new ConsoleCallbackHandler()], // 印出對話鏈事件紀錄
       returnSourceDocuments: false, // 可以設定為 true，會回傳資料庫中查詢到的文件
       verbose: false,
-    }
+    },
   )
 }
 

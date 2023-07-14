@@ -12,8 +12,8 @@ const { pineconeIndex, PineconeStore } = await usePinecone()
 
 // In Node.js defaults to process.env.OPENAI_API_KEY
 const model = new OpenAI({
-  temperature: 0.1, // In LangChain default is 0.7
-  modelName: 'gpt-3.5-turbo-0613', // In LangChain defaults is "text-davinci-003"
+  temperature: 0.1, // default is 1
+  modelName: 'gpt-3.5-turbo-0613',
   callbacks: [new ConsoleCallbackHandler()], // 印出 OpenAI 事件紀錄
 })
 
