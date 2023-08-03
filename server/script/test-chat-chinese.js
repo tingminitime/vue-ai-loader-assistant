@@ -31,34 +31,10 @@ const totalCostHandler = tokenUsage => {
 }
 
 // OpenAI
-// const model = new ChatOpenAI({
-//   temperature: 0.1, // default is 0.7
-//   modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
-//   // streaming: true,
-//   callbacks: [
-//     new ConsoleCallbackHandler(),
-//     {
-//       handleLLMEnd: async output => {
-//         console.log(output.llmOutput?.tokenUsage)
-//         totalCostHandler(output.llmOutput?.tokenUsage)
-//       },
-//       // async handleLLMNewToken(token) {
-//       //   process.stdout.write(chalk.green(token))
-//       // },
-//     },
-//   ],
-// })
-
-// Azure OpenAI
 const model = new ChatOpenAI({
   temperature: 0.1, // default is 0.7
-  modelName: 'gpt-35-turbo',
-  streaming: true,
-  azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
-  azureOpenAIApiInstanceName: process.env.AZ_OPENAI_API_INSTANCE_NAME,
-  azureOpenAIApiDeploymentName: process.env.AZ_OPENAI_API_DEPLOYMENT_NAME,
-  azureOpenAIApiVersion: process.env.AZ_OPENAI_API_VERSION,
-  azureOpenAIBasePath: process.env.AZ_OPENAI_BASE_PATH,
+  modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
+  // streaming: true,
   callbacks: [
     new ConsoleCallbackHandler(),
     {
@@ -72,6 +48,30 @@ const model = new ChatOpenAI({
     },
   ],
 })
+
+// Azure OpenAI
+// const model = new ChatOpenAI({
+//   temperature: 0.1, // default is 0.7
+//   modelName: 'gpt-35-turbo',
+//   streaming: true,
+//   azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
+//   azureOpenAIApiInstanceName: process.env.AZ_OPENAI_API_INSTANCE_NAME,
+//   azureOpenAIApiDeploymentName: process.env.AZ_OPENAI_API_DEPLOYMENT_NAME,
+//   azureOpenAIApiVersion: process.env.AZ_OPENAI_API_VERSION,
+//   azureOpenAIBasePath: process.env.AZ_OPENAI_BASE_PATH,
+//   callbacks: [
+//     new ConsoleCallbackHandler(),
+//     {
+//       handleLLMEnd: async output => {
+//         console.log(output.llmOutput?.tokenUsage)
+//         totalCostHandler(output.llmOutput?.tokenUsage)
+//       },
+//       // async handleLLMNewToken(token) {
+//       //   process.stdout.write(chalk.green(token))
+//       // },
+//     },
+//   ],
+// })
 
 const azureEmbeddings = new OpenAIEmbeddings({
   azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
