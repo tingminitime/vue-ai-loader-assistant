@@ -31,34 +31,10 @@ const totalCostHandler = tokenUsage => {
 }
 
 // OpenAI
-const model = new ChatOpenAI({
-  temperature: 0.1, // default is 0.7
-  modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
-  // streaming: true,
-  callbacks: [
-    new ConsoleCallbackHandler(),
-    {
-      handleLLMEnd: async output => {
-        console.log(output.llmOutput?.tokenUsage)
-        totalCostHandler(output.llmOutput?.tokenUsage)
-      },
-      // async handleLLMNewToken(token) {
-      //   process.stdout.write(chalk.green(token))
-      // },
-    },
-  ],
-})
-
-// Azure OpenAI
 // const model = new ChatOpenAI({
 //   temperature: 0.1, // default is 0.7
-//   modelName: 'gpt-35-turbo',
-//   streaming: true,
-//   azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
-//   azureOpenAIApiInstanceName: process.env.AZ_OPENAI_API_INSTANCE_NAME,
-//   azureOpenAIApiDeploymentName: process.env.AZ_OPENAI_API_DEPLOYMENT_NAME,
-//   azureOpenAIApiVersion: process.env.AZ_OPENAI_API_VERSION,
-//   azureOpenAIBasePath: process.env.AZ_OPENAI_BASE_PATH,
+//   modelName: 'gpt-3.5-turbo-0613', // Defaults is "text-davinci-003"
+//   // streaming: true,
 //   callbacks: [
 //     new ConsoleCallbackHandler(),
 //     {
@@ -72,6 +48,30 @@ const model = new ChatOpenAI({
 //     },
 //   ],
 // })
+
+// Azure OpenAI
+const model = new ChatOpenAI({
+  temperature: 0.1, // default is 0.7
+  modelName: 'gpt-35-turbo',
+  streaming: true,
+  azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
+  azureOpenAIApiInstanceName: process.env.AZ_OPENAI_API_INSTANCE_NAME,
+  azureOpenAIApiDeploymentName: process.env.AZ_OPENAI_API_DEPLOYMENT_NAME,
+  azureOpenAIApiVersion: process.env.AZ_OPENAI_API_VERSION,
+  azureOpenAIBasePath: process.env.AZ_OPENAI_BASE_PATH,
+  callbacks: [
+    new ConsoleCallbackHandler(),
+    {
+      handleLLMEnd: async output => {
+        console.log(output.llmOutput?.tokenUsage)
+        totalCostHandler(output.llmOutput?.tokenUsage)
+      },
+      // async handleLLMNewToken(token) {
+      //   process.stdout.write(chalk.green(token))
+      // },
+    },
+  ],
+})
 
 const azureEmbeddings = new OpenAIEmbeddings({
   azureOpenAIApiKey: process.env.AZ_OPENAI_API_KEY,
@@ -121,21 +121,21 @@ const chinese_questions = [
       '請用至少300字繁體中文回答以下問題:\n請列出桃花源記詩文全文，並白話說明文章解析。',
     select_prompt: OPEN_PROMPT,
   },
-  {
-    question:
-      '請用至少300字繁體中文回答以下問題:\n請歸納出本文出現的成語，並說明成語釋義。',
-    select_prompt: QA_PROMPT,
-  },
-  {
-    question:
-      '請用至少300字繁體中文回答以下問題:\n請出三題與本文內容相關的考題，題型分別為選擇題、問答題、填充題。考題方向可考形音義、成語、作者文化、文本涵義等。',
-    select_prompt: NORMAL_PROMPT,
-  },
-  {
-    question:
-      '請用至少300字繁體中文回答以下問題:\n請列出過去與本文有關的高中學測的歷屆考題與答案解析。',
-    select_prompt: NORMAL_PROMPT,
-  },
+  // {
+  //   question:
+  //     '請用至少300字繁體中文回答以下問題:\n請歸納出本文出現的成語，並說明成語釋義。',
+  //   select_prompt: QA_PROMPT,
+  // },
+  // {
+  //   question:
+  //     '請用至少300字繁體中文回答以下問題:\n請出三題與本文內容相關的考題，題型分別為選擇題、問答題、填充題。考題方向可考形音義、成語、作者文化、文本涵義等。',
+  //   select_prompt: NORMAL_PROMPT,
+  // },
+  // {
+  //   question:
+  //     '請用至少300字繁體中文回答以下問題:\n請列出過去與本文有關的高中學測的歷屆考題與答案解析。',
+  //   select_prompt: NORMAL_PROMPT,
+  // },
 ]
 
 async function askMultipleQuestions(questions) {

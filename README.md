@@ -1,12 +1,29 @@
 ## vue-ai-assistant
 
-Vue3 + LangChain + OpenAI
+Node.js + LangChainJS + OpenAI / Azure OpenAI
+
+### Technologies
 
 - node.js: v18
+- vue
+- langchain
+- openai
+
+### Client Setup
 
 ```bash
+cd client
+pnpm install
+```
+
+### Server Setup
+
+```bash
+cd server
 npm install
 ```
+
+#### Ingest document
 
 ```bash
 node ingest-data.js
